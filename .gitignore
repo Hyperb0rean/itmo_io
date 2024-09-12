@@ -1,0 +1,13 @@
+.vscode
+*.cmd
+*.ko
+*.o
+*.symvers
+*.order
+*.mod*
+*.o.d
+*.mod.c
+Module.symvers
+modules.order
+compile_commands.json
+.cache
