@@ -2,6 +2,7 @@
 #include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/types.h>
+#include <linux/ctype.h>
 #include <linux/kdev_t.h>
 #include <linux/fs.h>
 #include <linux/device.h>
@@ -14,6 +15,9 @@ static struct cdev c_dev;
 static struct class *cl;
 
 char ibuf[BUF_SIZE];
+
+char log_buf[BUF_SIZE];
+int log_off = 0;
 
 static int my_open(struct inode *i, struct file *f)
 {
@@ -30,20 +34,46 @@ static int my_close(struct inode *i, struct file *f)
 static ssize_t my_read(struct file *f, char __user *buf, size_t len,
                        loff_t *off)
 {
-    int count = strlen(ibuf);
+    int count = strlen(log_buf);
     printk(KERN_INFO "Driver: read()\n");
 
     if (*off > 0 || len < count) {
         return 0;
     }
 
-    if (copy_to_user(buf, ibuf, count) != 0) {
+    if (copy_to_user(buf, log_buf, count) != 0) {
         return -EFAULT;
     }
 
     *off = count;
 
     return count;
+}
+
+static int count_not_alnum(int len)
+{
+    char sym;
+    int i;
+    int letters_count = 0;
+
+    for (i = 0; i != len; ++i) {
+        sym = ibuf[i];
+
+        //https://en.cppreference.com/w/c/string/byte/isalnum
+
+        if (isalnum(sym) == 0) {
+            ++letters_count;
+        }
+    }
+
+    return letters_count - 1;
+}
+
+static void log_number(int count)
+{
+    char int_to_str[5];
+    sprintf(int_to_str, "%d ", count);
+    strncat(log_buf, int_to_str, strlen(int_to_str));
 }
 
 static ssize_t my_write(struct file *f, const char __user *buf, size_t len,
@@ -57,6 +87,13 @@ static ssize_t my_write(struct file *f, const char __user *buf, size_t len,
     if (copy_from_user(ibuf, buf, len) != 0) {
         return -EFAULT;
     }
+
+    if (log_off >= BUF_SIZE - 4) {
+        return 0;
+    }
+
+    int count = count_not_alnum(len);
+    log_number(count);
 
     return len;
 }
