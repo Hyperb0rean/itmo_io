@@ -12,6 +12,8 @@
 #define MEMSIZE 0xF000 // Size of Ram disk in sectors
 int c = 0; //Variable for Major Number
 
+#define MIB_TO_SECTORS(mib) (mib * 1024 * 1024 / 512)
+
 #define SECTOR_SIZE 512
 #define MBR_SIZE SECTOR_SIZE
 #define MBR_DISK_SIGNATURE_OFFSET 440
@@ -63,7 +65,7 @@ static PartTable def_part_table = { {
                                        end_sec: 0x20,
                                        end_cyl: 0x9F,
                                        abs_start_sec: 0x1,
-                                       sec_in_part: 0x4FFF // 10Mbyte
+                                       sec_in_part: MIB_TO_SECTORS(8)
                                    },
                                     {
                                         boot_type: 0x00,
@@ -76,7 +78,19 @@ static PartTable def_part_table = { {
                                         end_head: 0xB,
                                         end_cyl: 0x9F,
                                         abs_start_sec: 0x5000,
-                                        sec_in_part: 0xA000
+                                        sec_in_part: MIB_TO_SECTORS(27)
+                                    },
+                                    {
+                                        boot_type: 0x00,
+                                        start_sec: 0x2,
+                                        start_head: 0x0,
+                                        start_cyl: 0x0,
+                                        part_type: 0x83,
+                                        end_head: 0x3,
+                                        end_sec: 0x20,
+                                        end_cyl: 0x9F,
+                                        abs_start_sec: 0x1,
+                                        sec_in_part: MIB_TO_SECTORS(15)
                                     } };
 static unsigned int def_log_part_br_abs_start_sector[] = { 0x5000, 0xA000 };
 static const PartTable def_log_part_table[] = { { {
@@ -214,9 +228,24 @@ static int rb_transfer(struct request *req)
 
         if (dir == WRITE) /* Write to the device */
         {
+            u8 *calculateBuffer = vmalloc(sectors * MDISK_SECTOR_SIZE);
+            size_t i = 0;
+            u8 *data = (device.data) +
+                       ((start_sector + sector_offset) * MDISK_SECTOR_SIZE);
+            memcpy(calculateBuffer, buffer, sectors * MDISK_SECTOR_SIZE);
+
+            for (; i < sectors * MDISK_SECTOR_SIZE; ++i, ++data) {
+                if (calculateBuffer[i] != *data) {
+                    calculateBuffer[i] = calculateBuffer[i] *
+                                         calculateBuffer[i] *
+                                         calculateBuffer[i];
+                }
+            }
+
             memcpy((device.data) +
-                       ((start_sector + sector_offset) * SECTOR_SIZE),
-                   buffer, sectors * SECTOR_SIZE);
+                       ((start_sector + sector_offset) * MDISK_SECTOR_SIZE),
+                   calculateBuffer, sectors * MDISK_SECTOR_SIZE);
+            vfree(calculateBuffer);
         } else /* Read from the device */
         {
             memcpy(buffer,
