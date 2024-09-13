@@ -151,5 +151,5 @@ module_init(ch_drv_init);
 module_exit(ch_drv_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Author");
-MODULE_DESCRIPTION("The first kernel module");
+MODULE_AUTHOR("greg");
+MODULE_DESCRIPTION("BLOCK DRIVER");
