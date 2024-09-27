@@ -29,8 +29,23 @@
 
 Сервер:
 
-
+```console
+hyperb0rean@hyperb0rean-HP-Laptop-15s-fq2xxx: $ nc -u -l -p 2222
+message
+secret
+```
 Клиент:
-
+```console
+hyperb0rean@hyperb0rean-HP-Laptop-15s-fq2xxx: $ nc -u localhost 2222
+message
+secret
+```
 
 Логи драйвера:
+
+```console
+[178563.618387] wlo1: associated
+[178563.702724] wlo1: Limiting TX power to 23 (23 - 0) dBm as advertised by 54:ec:2f:4b:76:2c
+[178725.616545] Captured IPv4 with UDP packet, source: 127.0.0.1:60812, destination: 127.0.0.1:2222
+                  data length: 7, data: secret
+```
