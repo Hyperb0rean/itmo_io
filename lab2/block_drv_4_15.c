@@ -228,13 +228,13 @@ static int rb_transfer(struct request *req)
 
         if (dir == WRITE) /* Write to the device */
         {
-            u8 *calculateBuffer = vmalloc(sectors * MDISK_SECTOR_SIZE);
+            u8 *calculateBuffer = vmalloc(sectors * SECTOR_SIZE);
             size_t i = 0;
-            u8 *data = (device.data) +
-                       ((start_sector + sector_offset) * MDISK_SECTOR_SIZE);
-            memcpy(calculateBuffer, buffer, sectors * MDISK_SECTOR_SIZE);
+            u8 *data =
+                (device.data) + ((start_sector + sector_offset) * SECTOR_SIZE);
+            memcpy(calculateBuffer, buffer, sectors * SECTOR_SIZE);
 
-            for (; i < sectors * MDISK_SECTOR_SIZE; ++i, ++data) {
+            for (; i < sectors * SECTOR_SIZE; ++i, ++data) {
                 if (calculateBuffer[i] != *data) {
                     calculateBuffer[i] = calculateBuffer[i] *
                                          calculateBuffer[i] *
@@ -243,8 +243,8 @@ static int rb_transfer(struct request *req)
             }
 
             memcpy((device.data) +
-                       ((start_sector + sector_offset) * MDISK_SECTOR_SIZE),
-                   calculateBuffer, sectors * MDISK_SECTOR_SIZE);
+                       ((start_sector + sector_offset) * SECTOR_SIZE),
+                   calculateBuffer, sectors * SECTOR_SIZE);
             vfree(calculateBuffer);
         } else /* Read from the device */
         {
